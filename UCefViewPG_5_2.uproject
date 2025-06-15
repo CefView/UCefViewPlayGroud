@@ -17,11 +17,20 @@
       "TargetAllowList": [
         "Editor"
       ]
+    },
+    {
+      "Name": "UCefView",
+      "Enabled": true,
+      "MarketplaceURL": "com.epicgames.launcher://ue/Fab/product/f7e26827-dcd8-49ff-bf3f-cf9a2259033e",
+      "SupportedTargetPlatforms": [
+        "Win64",
+        "Linux",
+        "Mac"
+      ]
     }
   ],
   "TargetPlatforms": [
     "Linux",
-    "LinuxArm64",
     "Mac",
     "Windows"
   ]
