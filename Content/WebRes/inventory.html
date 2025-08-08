@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Heavy Inventory Drag & Drop Stress Test</title>
+  <style>
+    :root {
+      --slot-size: 56px;
+      --gap-size: 4px;
+      --bg: #111218;
+      --panel-bg: #1b1d26;
+      --panel-border: #303240;
+      --accent: #ffb300;
+      --text: #f5f5f5;
+      --muted: #a0a4b8;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 12px;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #26293b 0, #0b0b10 50%, #050509 100%);
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: 20px;
+      text-align: center;
+      letter-spacing: 0.03em;
+    }
+
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
+      padding: 6px 10px;
+      background: linear-gradient(to right, rgba(255,255,255,0.04), rgba(255,255,255,0));
+      border-radius: 8px;
+    }
+
+    .top-left {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .top-title {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      opacity: 0.9;
+    }
+
+    .top-subtitle {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .perf-panel {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 11px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .perf-badge {
+      padding: 2px 6px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(0,0,0,0.3);
+      font-size: 10px;
+    }
+
+    .wrapper {
+      display: grid;
+      grid-template-columns: 2.2fr 1.4fr;
+      gap: 10px;
+      height: calc(100vh - 60px);
+      min-height: 400px;
+    }
+
+    .panel {
+      background: radial-gradient(circle at top left, #262a37 0, #151720 45%, #111218 100%);
+      border-radius: 10px;
+      border: 1px solid var(--panel-border);
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow:
+        0 8px 18px rgba(0,0,0,0.9),
+        inset 0 0 0 1px rgba(255,255,255,0.02);
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .panel-title {
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .panel-meta {
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    .grid-container {
+      position: relative;
+      flex: 1;
+      overflow: auto;
+      padding: 4px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.02), rgba(0,0,0,0.4));
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03);
+    }
+
+    .grid {
+      display: grid;
+      gap: var(--gap-size);
+      justify-content: flex-start;
+      align-content: flex-start;
+    }
+
+    .grid.inventory {
+      grid-template-columns: repeat(18, var(--slot-size));
+      grid-auto-rows: var(--slot-size);
+    }
+
+    .grid.chest {
+      grid-template-columns: repeat(12, var(--slot-size));
+      grid-auto-rows: var(--slot-size);
+    }
+
+    .slot {
+      width: var(--slot-size);
+      height: var(--slot-size);
+      border-radius: 6px;
+      border: 1px solid rgba(150, 160, 200, 0.45);
+      background: radial-gradient(circle at 30% 15%, #292f3e 0, #151723 55%, #0b0c11 100%);
+      position: relative;
+      overflow: hidden;
+      box-shadow:
+        inset 0 0 0 1px rgba(0,0,0,0.6),
+        0 0 0 1px rgba(0,0,0,0.6);
+      transition: border-color 80ms linear, box-shadow 80ms linear, transform 80ms linear;
+    }
+
+    .slot.slot-hover {
+      border-color: var(--accent);
+      box-shadow:
+        0 0 10px rgba(255, 179, 0, 0.7),
+        inset 0 0 0 1px rgba(0,0,0,0.8);
+      transform: translateY(-1px);
+    }
+
+    .slot.scanned {
+      box-shadow:
+        0 0 6px rgba(0, 230, 255, 0.4),
+        inset 0 0 0 1px rgba(0,0,0,0.7);
+      border-color: #44d9ff;
+    }
+
+    .slot::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 20% 0%, rgba(255,255,255,0.08) 0, transparent 40%);
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    .item {
+      position: absolute;
+      inset: 3px;
+      border-radius: 4px;
+      background: linear-gradient(135deg, #3b74d9, #1a2d63);
+      border: 1px solid rgba(158, 193, 255, 0.9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      text-align: center;
+      padding: 2px;
+      cursor: grab;
+      user-select: none;
+      color: #f9fbff;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+      box-shadow:
+        0 2px 6px rgba(0,0,0,0.9),
+        inset 0 0 0 1px rgba(255,255,255,0.08);
+      transition: transform 60ms linear, box-shadow 60ms linear, background 120ms linear;
+    }
+
+    .item.dragging {
+      opacity: 0.7;
+      cursor: grabbing;
+      transform: scale(1.03);
+      box-shadow:
+        0 4px 14px rgba(0,0,0,1),
+        0 0 10px rgba(255, 255, 255, 0.25);
+    }
+
+    .item.weapon {
+      background: linear-gradient(135deg, #a33e3e, #4e1818);
+      border-color: #ffb3b3;
+    }
+
+    .item.potion {
+      background: linear-gradient(135deg, #3c8d4c, #173620);
+      border-color: #a4e6a4;
+    }
+
+    .item.misc {
+      background: linear-gradient(135deg, #947a39, #3e3014);
+      border-color: #ffe8a3;
+    }
+
+    .item.rare {
+      background: linear-gradient(135deg, #6e45ff, #261f5c);
+      border-color: #e0d2ff;
+      box-shadow:
+        0 0 10px rgba(140, 98, 255, 0.7),
+        inset 0 0 0 1px rgba(255,255,255,0.12);
+    }
+
+    .item-label {
+      line-height: 1.1;
+    }
+
+    .item-meta {
+      font-size: 9px;
+      opacity: 0.8;
+    }
+
+    .footer {
+      margin-top: 4px;
+      font-size: 11px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .status-line {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 70%;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 6px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+
+    button {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.18);
+      color: var(--text);
+      padding: 4px 8px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+    }
+
+    button:hover {
+      background: rgba(255,255,255,0.10);
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    .badge-pill {
+      padding: 2px 6px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.15);
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    .badge-accent {
+      color: var(--accent);
+      border-color: rgba(255,179,0,0.4);
+    }
+
+    .fps-good {
+      color: #5cff9c;
+    }
+
+    .fps-mid {
+      color: #ffd452;
+    }
+
+    .fps-bad {
+      color: #ff6b6b;
+    }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <div class="top-left">
+      <div class="top-title">Inventory Stress Test</div>
+      <div class="top-subtitle">Large grid, many items, drag &amp; drop, highlight scanning, and JS FPS overlay.</div>
+    </div>
+    <div class="perf-panel">
+      <span class="perf-badge">
+        JS FPS: <span id="js-fps" class="fps-good">--</span>
+      </span>
+      <span class="perf-badge">
+        Moves: <span id="move-count">0</span>
+      </span>
+      <span class="perf-badge">
+        Slots: <span id="slot-count">--</span> | Items: <span id="item-count">--</span>
+      </span>
+    </div>
+  </div>
+
+  <div class="wrapper">
+    <!-- INVENTORY PANEL -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Player Inventory</div>
+        <div class="panel-meta" id="inv-meta"></div>
+      </div>
+      <div class="grid-container">
+        <div class="grid inventory" id="inventory-grid"></div>
+      </div>
+      <div class="footer">
+        <div class="status-line" id="status">Drag items rapidly across slots to stress test.</div>
+        <div class="btn-row">
+          <button id="reset-btn">Reset Layout</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHEST PANEL -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Shared Storage</div>
+        <div class="panel-meta" id="chest-meta"></div>
+      </div>
+      <div class="grid-container">
+        <div class="grid chest" id="chest-grid"></div>
+      </div>
+      <div class="footer">
+        <div class="badge-pill badge-accent">Tip: Use &ldquo;stat fps&rdquo; to compare while dragging.</div>
+        <div class="btn-row">
+          <button id="randomize-btn">Randomize Items</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const INVENTORY_COLS = 18;
+      const INVENTORY_ROWS = 12; // 216 slots
+      const CHEST_COLS = 12;
+      const CHEST_ROWS = 8;      // 96 slots
+      const INVENTORY_FILL_RATIO = 0.65;
+      const CHEST_FILL_RATIO = 0.5;
+
+      const inventoryGrid = document.getElementById("inventory-grid");
+      const chestGrid = document.getElementById("chest-grid");
+      const statusEl = document.getElementById("status");
+      const resetBtn = document.getElementById("reset-btn");
+      const randomizeBtn = document.getElementById("randomize-btn");
+      const jsFpsEl = document.getElementById("js-fps");
+      const moveCountEl = document.getElementById("move-count");
+      const slotCountEl = document.getElementById("slot-count");
+      const itemCountEl = document.getElementById("item-count");
+      const invMetaEl = document.getElementById("inv-meta");
+      const chestMetaEl = document.getElementById("chest-meta");
+
+      let moveCount = 0;
+      let draggedItemId = null;
+      const originalLayout = {}; // itemId -> slotId
+
+      const weaponNames = ["Sword", "Axe", "Dagger", "Mace", "Spear", "Hammer"];
+      const potionNames = ["Health", "Mana", "Stamina", "Antidote"];
+      const miscNames   = ["Ore", "Gem", "Cloth", "Leather", "Herb", "Runes"];
+
+      function randFrom(arr) {
+        return arr[Math.floor(Math.random() * arr.length)];
+      }
+
+      function makeItemLabel(type) {
+        const roll = Math.random();
+        if (type === "weapon") {
+          const base = randFrom(weaponNames);
+          const lvl = 1 + Math.floor(Math.random() * 25);
+          return {
+            title: base,
+            meta: "Lv." + lvl
+          };
+        } else if (type === "potion") {
+          const base = randFrom(potionNames);
+          const stack = 1 + Math.floor(Math.random() * 20);
+          return {
+            title: base + " Potion",
+            meta: "x" + stack
+          };
+        } else {
+          const base = randFrom(miscNames);
+          const stack = 1 + Math.floor(Math.random() * 99);
+          return {
+            title: base,
+            meta: "x" + stack
+          };
+        }
+      }
+
+      function createSlot(prefix, idx) {
+        const slot = document.createElement("div");
+        const slotId = prefix + "-" + idx;
+        slot.className = "slot";
+        slot.dataset.slotId = slotId;
+        return slot;
+      }
+
+      let itemIdCounter = 1;
+
+      function createItem(type) {
+        const item = document.createElement("div");
+        const id = "item-" + (itemIdCounter++);
+        item.id = id;
+
+        let classes = ["item", type];
+        // Rare roll
+        if (Math.random() < 0.08) {
+          classes.push("rare");
+        }
+        item.className = classes.join(" ");
+        item.draggable = true;
+
+        const label = makeItemLabel(type);
+        item.innerHTML =
+          '<div class="item-label">' +
+          label.title +
+          '</div><div class="item-meta">' +
+          label.meta +
+          "</div>";
+
+        originalLayout[id] = null; // to be filled when slotted
+        return item;
+      }
+
+      function populateGrid(gridEl, prefix, cols, rows, fillRatio) {
+        const totalSlots = cols * rows;
+        for (let i = 0; i < totalSlots; i++) {
+          const slot = createSlot(prefix, i + 1);
+
+          if (Math.random() < fillRatio) {
+            // Weighted random type
+            let type = "misc";
+            const roll = Math.random();
+            if (roll < 0.45) type = "weapon";
+            else if (roll < 0.75) type = "potion";
+
+            const item = createItem(type);
+            slot.appendChild(item);
+            originalLayout[item.id] = slot.dataset.slotId;
+          }
+
+          gridEl.appendChild(slot);
+        }
+      }
+
+      populateGrid(inventoryGrid, "inv", INVENTORY_COLS, INVENTORY_ROWS, INVENTORY_FILL_RATIO);
+      populateGrid(chestGrid, "chest", CHEST_COLS, CHEST_ROWS, CHEST_FILL_RATIO);
+
+      function updateCounts() {
+        const slots = document.querySelectorAll(".slot");
+        const items = document.querySelectorAll(".item");
+        slotCountEl.textContent = String(slots.length);
+        itemCountEl.textContent = String(items.length);
+        invMetaEl.textContent = INVENTORY_COLS + " x " + INVENTORY_ROWS + " slots";
+        chestMetaEl.textContent = CHEST_COLS + " x " + CHEST_ROWS + " slots";
+      }
+
+      updateCounts();
+
+      function setStatus(text) {
+        statusEl.textContent = text;
+      }
+
+      function setupDragAndDrop() {
+        const slots = Array.from(document.querySelectorAll(".slot"));
+        const items = Array.from(document.querySelectorAll(".item"));
+
+        items.forEach(item => {
+          item.addEventListener("dragstart", (e) => {
+            draggedItemId = item.id;
+            e.dataTransfer.effectAllowed = "move";
+            e.dataTransfer.setData("text/plain", item.id);
+            item.classList.add("dragging");
+          });
+
+          item.addEventListener("dragend", () => {
+            draggedItemId = null;
+            item.classList.remove("dragging");
+            slots.forEach(s => s.classList.remove("slot-hover"));
+          });
+        });
+
+        slots.forEach(slot => {
+          slot.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = "move";
+            slot.classList.add("slot-hover");
+          });
+
+          slot.addEventListener("dragleave", () => {
+            slot.classList.remove("slot-hover");
+          });
+
+          slot.addEventListener("drop", (e) => {
+            e.preventDefault();
+            slot.classList.remove("slot-hover");
+
+            const itemId = e.dataTransfer.getData("text/plain") || draggedItemId;
+            if (!itemId) return;
+
+            const dragged = document.getElementById(itemId);
+            if (!dragged) return;
+
+            const fromSlot = dragged.parentElement;
+            const toSlot = slot;
+
+            if (!fromSlot || fromSlot === toSlot) return;
+
+            const toSlotItem = toSlot.querySelector(".item");
+            if (toSlotItem) {
+              fromSlot.appendChild(toSlotItem);
+              originalLayout[toSlotItem.id] = fromSlot.dataset.slotId;
+            }
+
+            toSlot.appendChild(dragged);
+            originalLayout[dragged.id] = toSlot.dataset.slotId;
+
+            moveCount++;
+            moveCountEl.textContent = String(moveCount);
+
+            const fromId = fromSlot.dataset.slotId;
+            const toId = toSlot.dataset.slotId;
+            setStatus(`Moved "${dragged.textContent.trim()}" from ${fromId} → ${toId}`);
+          });
+        });
+      }
+
+      setupDragAndDrop();
+
+      resetBtn.addEventListener("click", () => {
+        const allItems = Array.from(document.querySelectorAll(".item"));
+        allItems.forEach(item => {
+          const originalSlotId = originalLayout[item.id];
+          const slot = document.querySelector('.slot[data-slot-id="' + originalSlotId + '"]');
+          if (slot) {
+            slot.appendChild(item);
+          }
+        });
+        moveCount = 0;
+        moveCountEl.textContent = "0";
+        setStatus("Layout reset to original positions.");
+      });
+
+      randomizeBtn.addEventListener("click", () => {
+        const slots = Array.from(document.querySelectorAll(".slot"));
+        const items = Array.from(document.querySelectorAll(".item"));
+
+        slots.forEach(slot => {
+          const child = slot.querySelector(".item");
+          if (child) {
+            slot.removeChild(child);
+          }
+        });
+
+        items.forEach(item => {
+          const slot = slots[Math.floor(Math.random() * slots.length)];
+          slot.appendChild(item);
+          originalLayout[item.id] = slot.dataset.slotId;
+        });
+
+        moveCount = 0;
+        moveCountEl.textContent = "0";
+        setStatus("Items randomized across all slots.");
+      });
+
+      // Scanning highlight to force frequent style updates / repaints
+      (function scanningLoop() {
+        const slots = Array.from(document.querySelectorAll(".slot"));
+        let index = 0;
+        setInterval(() => {
+          if (slots.length === 0) return;
+          const lastIndex = (index - 1 + slots.length) % slots.length;
+          slots[lastIndex].classList.remove("scanned");
+          slots[index].classList.add("scanned");
+          index = (index + 1) % slots.length;
+        }, 40); // ~25 scans per second
+      })();
+
+      // Lightweight JS FPS meter (adds a bit of work)
+      (function setupJsFps() {
+        let lastTime = performance.now();
+        let frameCount = 0;
+        let fps = 0;
+
+        function updateFps(ts) {
+          frameCount++;
+          const delta = ts - lastTime;
+          if (delta >= 500) {
+            fps = Math.round((frameCount / delta) * 1000);
+            frameCount = 0;
+            lastTime = ts;
+
+            jsFpsEl.textContent = String(fps);
+            jsFpsEl.classList.remove("fps-good", "fps-mid", "fps-bad");
+            if (fps >= 50) {
+              jsFpsEl.classList.add("fps-good");
+            } else if (fps >= 30) {
+              jsFpsEl.classList.add("fps-mid");
+            } else {
+              jsFpsEl.classList.add("fps-bad");
+            }
+          }
+          requestAnimationFrame(updateFps);
+        }
+
+        requestAnimationFrame(updateFps);
+      })();
+
+      setStatus("Drag items across both grids rapidly to stress test rendering and interaction.");
+    })();
+  </script>
+</body>
+</html>

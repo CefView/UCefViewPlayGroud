@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transparent Page</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: transparent;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+        }
+
+        .top-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            background: #007acc;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s ease;
+        }
+
+        .btn:hover {
+            background: #005a9e;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            z-index: 1000;
+        }
+
+        .modal {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 400px;
+            min-height: 300px;
+            background: #2d2d2d;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .modal-header {
+            background: #1e1e1e;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: move;
+            user-select: none;
+        }
+
+        .modal-title {
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .close-btn {
+            background: #ff5f56;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s ease;
+        }
+
+        .close-btn:hover {
+            background: #ff3b30;
+        }
+
+        .modal-content {
+            padding: 20px;
+            color: white;
+            line-height: 1.6;
+        }
+
+        .dragging {
+            user-select: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="top-buttons">
+        <button class="btn" onclick="openModal('settingsModal')">Settings</button>
+        <button class="btn" onclick="openModal('aboutModal')">About</button>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal-overlay">
+        <div class="modal" id="settingsWindow">
+            <div class="modal-header" onmousedown="startDrag(event, 'settingsWindow')">
+                <div class="modal-title">Settings</div>
+                <button class="close-btn" onclick="closeModal('settingsModal')">&times;</button>
+            </div>
+            <div class="modal-content">
+                <h3>Settings Options</h3>
+                <p>Here you can place various setting options and configuration content.</p>
+                <br>
+                <p>• Language Settings</p>
+                <p>• Theme Selection</p>
+                <p>• Notification Settings</p>
+                <p>• Privacy Options</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- About Modal -->
+    <div id="aboutModal" class="modal-overlay">
+        <div class="modal" id="aboutWindow">
+            <div class="modal-header" onmousedown="startDrag(event, 'aboutWindow')">
+                <div class="modal-title">About</div>
+                <button class="close-btn" onclick="closeModal('aboutModal')">&times;</button>
+            </div>
+            <div class="modal-content">
+                <h3>About This Application</h3>
+                <p>This is a simple HTML page example that demonstrates transparent background and draggable modal
+                    functionality.</p>
+                <br>
+                <p><strong>Version:</strong> 1.0.0</p>
+                <p><strong>Created:</strong> 2024</p>
+                <p><strong>Features:</strong></p>
+                <p>• Transparent background design</p>
+                <p>• Draggable modal windows</p>
+                <p>• Dark theme interface</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isDragging = false;
+        let currentModal = null;
+        let startX, startY, initialX, initialY;
+
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'block';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        function startDrag(e, modalId) {
+            isDragging = true;
+            currentModal = document.getElementById(modalId);
+
+            const rect = currentModal.getBoundingClientRect();
+            startX = e.clientX;
+            startY = e.clientY;
+            initialX = rect.left;
+            initialY = rect.top;
+
+            document.body.classList.add('dragging');
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('mouseup', stopDrag);
+
+            e.preventDefault();
+        }
+
+        function drag(e) {
+            if (!isDragging || !currentModal) return;
+
+            const deltaX = e.clientX - startX;
+            const deltaY = e.clientY - startY;
+
+            const newX = initialX + deltaX;
+            const newY = initialY + deltaY;
+
+            // 限制窗口不超出屏幕边界
+            const maxX = window.innerWidth - currentModal.offsetWidth;
+            const maxY = window.innerHeight - currentModal.offsetHeight;
+
+            const clampedX = Math.max(0, Math.min(newX, maxX));
+            const clampedY = Math.max(0, Math.min(newY, maxY));
+
+            currentModal.style.left = clampedX + 'px';
+            currentModal.style.top = clampedY + 'px';
+            currentModal.style.transform = 'none';
+        }
+
+        function stopDrag() {
+            isDragging = false;
+            currentModal = null;
+            document.body.classList.remove('dragging');
+            document.removeEventListener('mousemove', drag);
+            document.removeEventListener('mouseup', stopDrag);
+        }
+
+        // 点击遮罩层关闭弹窗
+        document.addEventListener('click', function (e) {
+            if (e.target.classList.contains('modal-overlay')) {
+                e.target.style.display = 'none';
+            }
+        });
+
+        // ESC键关闭弹窗
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                const openModals = document.querySelectorAll('.modal-overlay[style*="block"]');
+                openModals.forEach(modal => {
+                    modal.style.display = 'none';
+                });
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -9,25 +9,28 @@ public class UCefViewPlaygroundTarget : TargetRules
         Type = TargetType.Game;
         ExtraModuleNames.Add("UCefViewPlayground");
 
-#if UE_5_5_OR_LATER
-        DefaultBuildSettings = BuildSettingsVersion.V5;
-        IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_5;
+#if UE_5_7_OR_LATER
+        DefaultBuildSettings = BuildSettingsVersion.V6;
+        IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_7;
+#elif UE_5_5_OR_LATER
+                DefaultBuildSettings = BuildSettingsVersion.V5;
+                IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_5;
 #elif UE_5_4_OR_LATER
-        DefaultBuildSettings = BuildSettingsVersion.V5;
-        IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_4;
+                DefaultBuildSettings = BuildSettingsVersion.V5;
+                IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_4;
 #elif UE_5_3_OR_LATER
-        DefaultBuildSettings = BuildSettingsVersion.V4;
-        IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_3;
+                DefaultBuildSettings = BuildSettingsVersion.V4;
+                IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_3;
 #elif UE_5_2_OR_LATER
-        DefaultBuildSettings = BuildSettingsVersion.V3;
-        IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_2;
+                DefaultBuildSettings = BuildSettingsVersion.V3;
+                IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_2;
 #elif UE_5_1_OR_LATER
-        DefaultBuildSettings = BuildSettingsVersion.V2;
-        IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_1;
+                DefaultBuildSettings = BuildSettingsVersion.V2;
+                IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_1;
 #elif UE_5_0_OR_LATER
-        DefaultBuildSettings = BuildSettingsVersion.V2;
+                DefaultBuildSettings = BuildSettingsVersion.V2;
 #else
-        throw new System.Exception("Unsupported UE Version");
+                throw new System.Exception("Unsupported UE Version");
 #endif
     }
 }
