@@ -1,6 +1,6 @@
 {
   "FileVersion": 3,
-  "EngineAssociation": "5.6",
+  "EngineAssociation": "5.7",
   "Category": "",
   "Description": "",
   "Modules": [
@@ -17,6 +17,10 @@
       "TargetAllowList": [
         "Editor"
       ]
+    },
+    {
+      "Name": "WebMMoviePlayer",
+      "Enabled": false
     }
   ],
   "TargetPlatforms": [
@@ -29,7 +33,7 @@
     "Win64": [
       "echo UCefViewPlayground:PreBuildSteps:$(TargetType):$(TargetName)",
       "echo Copy CefView Trial Binaries and Content to UCefView Plugin Directory...",
-      "robocopy /s /e /is /it /v /njh /njs /np /ndl \"$(ProjectDir)\\Plugins\\~UCefView-Trial-Binaries-Content\\UE5.6\" \"$(ProjectDir)\\Plugins\\UCefView\"",
+      "robocopy /s /e /is /it /v /njh /njs /np /ndl \"$(ProjectDir)\\Plugins\\~UCefView-Trial-Binaries-Content\\UE5.7\" \"$(ProjectDir)\\Plugins\\UCefView\"",
       "if %ERRORLEVEL% LSS 8 (exit /B 0) else (exit /B %ERRORLEVEL%)"
     ]
   }
