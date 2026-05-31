@@ -10,15 +10,6 @@
       "LoadingPhase": "Default"
     }
   ],
-  "Plugins": [
-    {
-      "Name": "ModelingToolsEditorMode",
-      "Enabled": true,
-      "TargetAllowList": [
-        "Editor"
-      ]
-    }
-  ],
   "TargetPlatforms": [
     "Linux",
     "Mac",

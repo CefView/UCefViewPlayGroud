@@ -1,36 +1,27 @@
 {
-	"FileVersion": 3,
-	"EngineAssociation": "5.3",
-	"Category": "",
-	"Description": "",
-	"Modules": [
-		{
-			"Name": "UCefViewPlayground",
-			"Type": "Runtime",
-			"LoadingPhase": "Default"
-		}
-	],
-	"Plugins": [
-		{
-			"Name": "ModelingToolsEditorMode",
-			"Enabled": true,
-			"TargetAllowList": [
-				"Editor"
-			]
-		}
-	],
-	"TargetPlatforms": [
-		"Linux",
-		"Mac",
-		"Windows",
-		"LinuxArm64"
-	],
-	"PreBuildSteps": {
-		"Win64": [
-			"echo UCefViewPlayground:PreBuildSteps:$(TargetType):$(TargetName)",
-			"echo Copy CefView Trial Binaries and Content to UCefView Plugin Directory...",
-			"robocopy /s /e /is /it /v /njh /njs /np /ndl \"$(ProjectDir)\\Plugins\\~UCefView-Trial-Binaries-Content\\UE5.3\" \"$(ProjectDir)\\Plugins\\UCefView\"",
-			"if %ERRORLEVEL% LSS 8 (exit /B 0) else (exit /B %ERRORLEVEL%)"
-		]
-	}
+  "FileVersion": 3,
+  "EngineAssociation": "5.3",
+  "Category": "",
+  "Description": "",
+  "Modules": [
+    {
+      "Name": "UCefViewPlayground",
+      "Type": "Runtime",
+      "LoadingPhase": "Default"
+    }
+  ],
+  "TargetPlatforms": [
+    "Linux",
+    "Mac",
+    "Windows",
+    "LinuxArm64"
+  ],
+  "PreBuildSteps": {
+    "Win64": [
+      "echo UCefViewPlayground:PreBuildSteps:$(TargetType):$(TargetName)",
+      "echo Copy CefView Trial Binaries and Content to UCefView Plugin Directory...",
+      "robocopy /s /e /is /it /v /njh /njs /np /ndl \"$(ProjectDir)\\Plugins\\~UCefView-Trial-Binaries-Content\\UE5.3\" \"$(ProjectDir)\\Plugins\\UCefView\"",
+      "if %ERRORLEVEL% LSS 8 (exit /B 0) else (exit /B %ERRORLEVEL%)"
+    ]
+  }
 }

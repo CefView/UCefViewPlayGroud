@@ -10,19 +10,6 @@
       "LoadingPhase": "Default"
     }
   ],
-  "Plugins": [
-    {
-      "Name": "ModelingToolsEditorMode",
-      "Enabled": true,
-      "TargetAllowList": [
-        "Editor"
-      ]
-    },
-    {
-      "Name": "WebMMoviePlayer",
-      "Enabled": false
-    }
-  ],
   "TargetPlatforms": [
     "Linux",
     "Mac",
